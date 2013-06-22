@@ -1,11 +1,12 @@
 /**
 * Charity Charles
-*
+* Main
 * Main class for the Charity Charles game.
 * @author Boris Lykke Nielsen
 */
 
 package  {
+	// Dependencies
 	import net.eriksjodin.arduino.events.ArduinoEvent;
 
 	import flash.display.MovieClip;
@@ -22,6 +23,9 @@ package  {
 	import flash.media.SoundChannel;
 
 
+	/**
+	 * Main class where everything is put together
+	 */
 	public class Main extends MovieClip {
 		// Instance
 		private static var _instance:Main;
@@ -59,8 +63,12 @@ package  {
 		var greenLeftButtonDown:Boolean = false;
 		var greenRightButtonDown:Boolean = false;
 
+
+		/**
+		 * Main class constructor.
+		 * The game starts here.
+		 */
 		public function Main() {
-			// instance
 			_instance = this;
 			_leaderboard = new Leaderboard();
 			_arduino = new ArduinoWrapper();
@@ -74,23 +82,28 @@ package  {
 			bgmSoundChannel = bgMusic.play();
 			bgmSoundChannel.addEventListener(Event.SOUND_COMPLETE, bgMusicHandler);
 
+			// Game is ready, start the input
 			buttonTimer = new Timer(2000, 1);
 			buttonTimer.addEventListener(TimerEvent.TIMER_COMPLETE, buttonTimerStart);
 			buttonTimer.start();
 			//startBtn.addEventListener(MouseEvent.CLICK, startGame);
-			// init leaderboard
+
+			// init leaderboard, run only once!
 			//_leaderboard.initDB();
+		}
 
 
-		} // end Main
-
-
+		/**
+		 * Sets the buttonTimer to 50ms intervals.
+		 * @param  e TimerEvent
+		 * @return   void
+		 */
 		private function buttonTimerStart(e:TimerEvent):void {
-			// Timer
 			buttonTimer = new Timer(50);
 			buttonTimer.addEventListener(TimerEvent.TIMER, arduinoHandler);
 			buttonTimer.start();
 		}
+
 
 		/**
 		 * Update loop for main class.
@@ -103,42 +116,80 @@ package  {
 			scoreCounterRed.text = String(heroTwo.score);
 			RedCoinCounter.text = String(heroTwo.coins.length);
 			GreenCoinCounter.text = String(heroOne.coins.length);
-		} // end update
+		}
 
 
+		/**
+		 * Passes the KeyboardEvent to the heroes.
+		 * @param  e Key down KeyboardEvent
+		 * @return   void
+		 */
 		private function keyDownHandler(e:KeyboardEvent):void {
 			heroOne.keyDownHandler(e);
 			heroTwo.keyDownHandler(e);
 		}
 
+
+		/**
+		 * Passes the KeyboardEvent to the heroes.
+		 * @param  e Key up KeyboardEvent
+		 * @return   void
+		 */
 		private function keyUpHandler(e:KeyboardEvent):void {
 			heroOne.keyUpHandler(e);
 			heroTwo.keyUpHandler(e);
 		}
 
+
+		/**
+		 * Pops a coin and adds to stage.
+		 * @param  e TimerEvent
+		 * @return   void
+		 */
 		private function coinTimerHandler(e:TimerEvent):void {
 			var coin = _coins.pop();
 			_coinsOnStage.push(coin);
 			stage.addChild(coin);
+			// Start coin update loop
 			coin.begin();
 		}
 
+
+		/**
+		 * Restarts the background music when music stops.
+		 * @param  e Event
+		 * @return   void
+		 */
 		private function bgMusicHandler(e:Event):void {
+			// We don't need to remove listeners, that is automatic.
 			bgmSoundChannel = bgMusic.play();
 			bgmSoundChannel.addEventListener(Event.SOUND_COMPLETE, bgMusicHandler);
 		}
 
+
+		/**
+		 * Stops the game when the time runs out.
+		 * @param  e TimerEvent
+		 * @return   void
+		 */
 		private function gameTimerHandler(e:TimerEvent):void {
 			// stop the game
 			this.endGame();
-			// delay the button timer
+			// in case people keep button pressed we delay the button timer
 			delayTimer = new Timer(5000, 1);
 			delayTimer.addEventListener(TimerEvent.TIMER_COMPLETE, delayHandler);
 			delayTimer.start();
-			// finish the game
+			// finish the game, send to score screen
 			this.finishGame();
 		}
 
+
+		/**
+		 * Reads input from Arduino board. This handler should
+		 * only run when not in game to detect next frame.
+		 * @param  e TimerEvent
+		 * @return   void
+		 */
 		private function arduinoHandler(e:TimerEvent):void {
 			this.redButtonDown = _arduino.getDigitalData(3) == false;
 			this.redLeftButtonDown = _arduino.getDigitalData(4);
@@ -157,10 +208,23 @@ package  {
 			}
 		}
 
+
+		/**
+		 * Restarts the 50ms button timer.
+		 * Only run when not in game.
+		 * @param  e TimerEvent
+		 * @return   void
+		 */
 		private function delayHandler(e:TimerEvent):void {
 			buttonTimer.start();
 		}
 
+
+		/**
+		 * Goes to the next frame and starts the actions for that frame.
+		 * @param  current The current frame in the game
+		 * @return         void
+		 */
 		private function gotoNextFrame(current:int):void {
 			var frame:int = current;
 			switch (frame) {
@@ -180,12 +244,14 @@ package  {
 			}
 		}
 
+
 		/**
 		 * Creates the level layout and bank buildings.
+		 * @todo  Place player two using layout
 		 * @return void
 		 */
 		private function createLevel():void {
-			// Define the layout
+			// Define the layout in 2D array
 			var X:String = "heroOne";
 			_lvl[0] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 			_lvl[1] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -209,6 +275,7 @@ package  {
 			_lvl[19] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 			_lvl[20] = [0,0,0,0,0,0,0,0,0,X,0,0,0,0,0,0,0,0,0,0,0,0];
 
+			// place platforms (blocks) on sprite
 			for (var row:int = 0; row < _lvl.length; row++) {
 				for (var column:int = 0; column < _lvl[row].length; column++) {
 					if (_lvl[row][column] == 1 || _lvl[row][column] == 2 || _lvl[row][column] == 3) {
@@ -218,6 +285,7 @@ package  {
 
 						_blockHolder.addChild(newBlock);
 					}
+                    // set player position
 					if (_lvl[row][column] == X) {
 						heroOne.x = column * 37-18;
 						heroOne.y = row * 29-18;
@@ -225,6 +293,7 @@ package  {
 					}
 				}
 			}
+            // create player banks and set ownership
 			_leftBank = new Bank(heroTwo);
 			_leftBank.x = 0;
 			_leftBank.y = stage.stageHeight - _leftBank.height;
@@ -235,6 +304,7 @@ package  {
 			_rightBank.y = stage.stageHeight - _rightBank.height;
 			_rightBank.gotoAndStop(1);
 		}
+
 
 		/**
 		 * Creates 100 new coins to use in game.
@@ -249,8 +319,10 @@ package  {
 			}
 		}
 
+
 		/**
 		 * Removes a coin from the game.
+         * This is used when a coin is picked up.
 		 * @param  c The coin to remove
 		 * @return   void
 		 */
@@ -262,8 +334,9 @@ package  {
 			_coinsOnStage.splice(_coinsOnStage.indexOf(c), 1);
 		}
 
+
 		/**
-		 * used to find the opponent object
+		 * used to find a heros opponent.
 		 * @param  h The Hero lokking for his opponent.
 		 * @return   The opponent of H otherwise null
 		 */
@@ -276,6 +349,7 @@ package  {
 			}
 			return null;
 		}
+
 
 		/**
 		 * Finds if anyone has won the game.
@@ -291,6 +365,12 @@ package  {
 			return null;
 		}
 
+
+        /**
+         * Goes to the proper frame,
+         * places elements on stage and starts timers, events.
+         * @return void
+         */
 		private function startGame():void {
 			// go to the proper frame
 			this.gotoAndStop(3);
@@ -321,6 +401,11 @@ package  {
 
 		}
 
+
+        /**
+         * Resets variables and timers for a new game.
+         * @return void
+         */
 		private function prepareGame():void {
 			// reset arrays
 			_lvl.length = 0;
@@ -339,6 +424,12 @@ package  {
 			countTimer = new CountTimer(2, 0, "down");
 		}
 
+
+        /**
+         * Runs when game ends.
+         * Stops timers, events and removes elements from stage.
+         * @return void
+         */
 		private function endGame():void {
 			// remove game loop
 			stage.removeEventListener(Event.ENTER_FRAME, update);
@@ -366,6 +457,12 @@ package  {
 
 		}
 
+
+        /**
+         * Runs when game ends and after endGame()
+         * Finds the winner and announces that player
+         * @return void
+         */
 		private function finishGame():void {
 			// Go to finish frame
 			this.gotoAndStop(4);
@@ -386,11 +483,22 @@ package  {
 			restartTimer.start();
 		}
 
+
+        /**
+         * Goes to the first frame when player has left.
+         * @param  e TimerEvent
+         * @return   Void
+         */
 		private function gotoStart(e:TimerEvent):void {
 			restartTimer.stop();
 			gotoNextFrame(1);
 		}
 
+
+        /**
+         * Restarts the game.
+         * @return void
+         */
 		private function restartGame():void {
 			restartTimer.stop();
 			// no more changes can be made in this game. Create the session data and put in storage.
@@ -401,9 +509,7 @@ package  {
 			this.startGame();
 		}
 
-		/**
-		 * Getters
-		 */
+		/** Getters */
 		public static function get instance():Main { return _instance; }
 		public function get blocks():Sprite { return _blockHolder; }
 		public function get heroes():Array { return [heroOne, heroTwo]; }

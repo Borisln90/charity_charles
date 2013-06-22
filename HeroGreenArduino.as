@@ -1,5 +1,11 @@
-﻿package  {
-	
+﻿/**
+ * Charity Charles
+ * HeroGreenArduino
+ * Package for green hero with arduino.
+ * @author Boris Lykke Nielsen
+ */
+package  {
+
 	import ArduinoWrapper;
 	import net.eriksjodin.arduino.events.ArduinoEvent;
 	import flash.display.MovieClip;
@@ -8,10 +14,13 @@
 	import flash.ui.Keyboard;
 	import flash.utils.Timer;
 	import flash.events.TimerEvent;
-	
-	
+
+
+	/**
+	 * Green hero with Arduino support
+	 */
 	public class HeroGreenArduino extends Hero {
-		
+
 		var arduino:ArduinoWrapper;
 		var timer:Timer;
 		var leftPin:int = 7;
@@ -20,8 +29,12 @@
 		var leftKeyDown:Boolean = false;
 		var rightKeyDown:Boolean = false;
 		var upKeyDown:Boolean = false;
-		
-		
+
+
+		/**
+		 * Constructor
+		 * @param a Arduino instance
+		 */
 		public function HeroGreenArduino(a:ArduinoWrapper) {
 			// constructor code
 			arduino = a;
@@ -31,22 +44,38 @@
 			this.addEventListener(Event.ENTER_FRAME, update);
 			this.nme = "green";
 		}
-		
-		
+
+
+		/**
+		 * Update loop
+		 * @param  e Event.ENTER_FRAME
+		 * @return   void
+		 */
 		private function update(e:Event):void {
 			this.move(leftKeyDown, rightKeyDown);
 			if (upKeyDown && !this.isJumping) {
 				this.jump();
 			}
 		}
-		
+
+
+		/**
+		 * Reads input from Arduino
+		 * @param  e TimerEvent
+		 * @return   void
+		 */
 		public function arduinoHandler(e:TimerEvent):void {
 			leftKeyDown = arduino.getDigitalData(leftPin);
 			rightKeyDown = arduino.getDigitalData(rightPin);
 			upKeyDown = arduino.getDigitalData(upPin) == false;
 		}
-		
-		
+
+
+		/**
+		 * Key down for keyboard support
+		 * @param  e KeyboardEvent
+		 * @return   void
+		 */
 		public function keyDownHandler(e:KeyboardEvent):void {
 			var target = e.keyCode;
 			switch (target) {
@@ -60,9 +89,14 @@
 					rightKeyDown = true;
 					break;
 			}
-		} // end keyDownHandler
-		
-		
+		}
+
+
+		/**
+		 * Key up for keyboard support
+		 * @param  e KeyboardEvent
+		 * @return   void
+		 */
 		public function keyUpHandler(e:KeyboardEvent):void {
 			var target = e.keyCode;
 			switch (target) {
@@ -76,7 +110,7 @@
 					rightKeyDown = false;
 					break;
 			}
-		} // end keyUpHandler
+		}
 	}
-	
+
 }
